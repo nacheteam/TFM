@@ -1,0 +1,1053 @@
+\part{Explicación de los modelos y análisis de resultados}
+\label{part:explicacionmodelos_analisisrresultados}
+
+\chapter{Modelos implementados}
+\label{chapter:modelos}
+
+En este capítulo vamos a repasar qué modelos he implementado y cómo funcionan cada uno de ellos. Primero se hará una revisión teórica de los modelos y posteriormente un análisis breve del código explicando las particularidades de las implementaciones. El contenido de esta sección se basa en los libros de Aggarwal Outlier Analysis \cite{aggarwal_outlier_2017-1} y Outlier Ensembles \cite{aggarwal_outlier_2017} y en los artículos de HICS \cite{fabian_keller_hics:_2012}, LODA \cite{pevny_loda:_2016} y OUTRES \cite{muller_statistical_2011}.
+
+\section{Algoritmos de ensamblaje}
+
+Los algoritmos que he implementado pertenecen a una familia concreta de algoritmos de detección de anomalías denominados como algoritmos de ensamblaje o ``Ensemble Algorithms'' en inglés. Estos algoritmos son lo equivalente a los meta-algoritmos pero destinados a la detección de anomalías. Para dar una mejor definición de qué son los algoritmos de ensamblaje vamos a introducir una clasificación de los mismos para dar las categorías que entran dentro de esta definición.
+
+\begin{itemize}
+	\item Algoritmos de ensamblaje secuenciales: En este tipo de algoritmos tenemos un algoritmos base o un conjunto de algoritmos base que se aplican de forma secuencial, de forma que las primeras ejecuciones se ven usadas o modificadas por ejecuciones futuras de algoritmos. Finalmente el resultado puede ser una combinación ponderada de las valoraciones de los algoritmos o el resultado del último de ellos.
+	
+	
+	\begin{algorithm}[H]{\textbf{Ensamblaje secuencial:}}
+		\SetAlgoLined
+		
+		\textbf{Entrada: } Conjunto de datos $\mathcal{D}$, Algoritmos base $\mathcal{A}_1 , ... , \mathcal{A}_r$
+		
+		j=1
+		
+		\Repeat{fin}{
+			Tomamos el algoritmo $\mathcal{A}_j$ según los resultados anteriores
+			
+			Tomamos el conjunto de datos modificado $f_j (\mathcal{D})$ de anteriores ejecuciones
+			
+			Ejecutamos el algoritmo $\mathcal{A}_j$ sobre $f_j (\mathcal{D})$
+			
+			j=j+1
+			
+		}
+	
+		\KwResult{Combinación de los resultados}
+	\end{algorithm}
+	\item Algoritmos de ensamblaje independientes: En este caso se emplean o bien diferentes instancias del mismo algoritmo o bien diferentes porciones de los datos que se emplearán de forma distinta. Se puede variar la instanciación por ejemplo dependiendo del subespacio sobre el que queramos ejecutarlo o dependiendo de las características de una porción concreta de los datos.
+	
+	\begin{algorithm}[H]{\textbf{Ensamblaje independiente:}}
+		\SetAlgoLined
+		
+		\textbf{Entrada: } Conjunto de datos $\mathcal{D}$, Algoritmos base $\mathcal{A}_1 , ... , \mathcal{A}_r$
+		
+		j=1
+		
+		\Repeat{fin}{
+			Tomamos el algoritmo $\mathcal{A}_j$
+			
+			Creamos el conjunto de datos modificado $f_j (\mathcal{D})$
+			
+			Ejecutamos el algoritmo $\mathcal{A}_j$ sobre $f_j (\mathcal{D})$
+			
+			j=j+1
+			
+		}
+		
+		\KwResult{Combinación de los resultados}
+	\end{algorithm}
+\end{itemize}
+
+\section{Mahalanobis Kernel}
+
+Este algoritmo está englobado dentro de la categoría de algoritmos basados en dependencia. Esta clase de algoritmos intenta estudiar las dependencias que existen entre atributos para así poder detectar las instancias u objetos que no tienen estas dependencias y marcarlos como anomalías.
+
+Si intentamos visualizar esta dependencia entre atributos de forma gráfica lo que observaríamos es que los datos están alineados o posicionados en hiperplanos lineales o no lineales de la siguiente forma:
+
+\begin{figure}[H]
+	\centering
+	\label{hiperplano}
+	\includegraphics[scale=0.8]{imagenes/hiperplano}
+	\caption{Hiperplano}
+\end{figure}
+
+Esta figura es un ejemplo clásico de estudio de algoritmos como por ejemplo PCA (algoritmo que quedaría dentro de esta categoría).
+
+\begin{figure}[H]
+	\centering
+	\label{hiperboloide}
+	\includegraphics[scale=2.5]{imagenes/hiperboloide}
+	\caption{Hiperboloide \href{https://commons.wikimedia.org/wiki/File:Circular_Hyperboloid_Of_One_Sheet_Quadric.png}{Wikimedia}}
+\end{figure}
+
+En este caso tenemos el ejemplo de un hiperboloide que no tiene una dependencia lineal, si no que presenta una dependencia de tipo cuadrático.
+
+El método de Mahalanobis Kernel puede ser visto como una modificación de PCA. PCA básicamente dispone de dos pasos:
+
+\begin{enumerate}
+	\item Determinar un sistema ortogonal de direcciones principales y proyectar los datos sobre este sistema.
+	\item Calcular la distancia entre el punto original y la proyección como su puntuación de anomalía.
+\end{enumerate}
+
+El método Mahalanobis Kernel intenta tener este mismo comportamiento en dos pasos y que ahora veremos. El algoritmo PCA es muy útil cuando los datos tienen atributos relacionados en un hiperplano, mientras que Mahalanobis Kernel funciona mejor cuando los datos están relacionados en formas más complejas como el hiperboloide que hemos enseñado. La elección de este algoritmo en vez de PCA recae en el hecho de que PCA es un algoritmo clásico y el escenario en el que mejor funciona (hiperplano) es más restrictivo que el que nos ofrece Mahalanobis Kernel con un abanico de figuras más amplio.
+
+Vamos a describir el funcionamiento del algoritmo, pero primero vamos a introducir notación. Vamos a llamar $D$ a la matriz de datos que está centrada en la media y que tiene dimensiones $n\times d$, es decir, tenemos $n$ instancias u objetos de dimensionalidad $d$.
+
+\begin{algorithm}[H]{\textbf{Mahalanobis Kernel}}
+	\caption{Mahalanobis Kernel}
+	\label{mahalanobis_kernel}
+	\KwIn{$D$}
+	
+	$S = DD^T$.
+	
+	$S = Q\Delta^2 Q^T$.
+	
+	Almacenamos los vectores propios columna no negativos de $Q\Delta$ en una matriz $D'$
+	
+	Normalizamos $D'$ para que tenga media $0$ y varianza $1$.
+	
+	$vector\_media = media(D')$
+	
+	$puntuaciones = []$
+	
+	\ForEach{fila en D'}{
+		$score = distancia(vector\_media , fila)$
+		
+		$puntuaciones = [puntuaciones, score]$
+	}
+	\KwOut{puntuaciones}
+\end{algorithm}
+
+El algoritmo comienza con la matriz de datos $D$. Se obtiene la matriz simétrica $S$ y se hace la descomposición en valores singulares. 
+
+Con este modelo tenemos las dos fases que teníamos en PCA. Primero obtenemos una matriz $D'$ de los datos proyectados y transformados para posteriormente reportar la puntuación de anomalía como una distancia.
+
+Veamos ahora la implementación en Python.
+
+\begin{lstlisting}[language=Python]
+def runMethod(self):
+	'''
+	@brief Function that executes the Kernel Mahalanobis method. The results are
+	stored on the variable self.scores
+	@param self
+	'''
+	''' Compute the S matrix of the algorithm'''
+	S = np.dot(self.dataset, self.dataset.T)
+	''' Now we diagonalize it'''
+	Q,delta_sq,Qt = np.linalg.svd(S)
+	del S
+	del Qt
+	''' Obtain delta as matrix'''
+	delta = np.matrix(np.diag(np.sqrt(delta_sq)))
+	del delta_sq
+	Q = np.matrix(Q)
+	''' Compute de D' matrix and normalize it'''
+	Dprime = np.dot(Q,delta)
+	del Q
+	del delta
+	Dp_std = scale(Dprime, axis=1)
+	del Dprime
+	''' We compute its mean on the rows to compute the deviation as the score'''
+	mean = Dp_std.mean(axis=0)
+	self.outlier_score=[]
+	''' The score is the euclidean distance to the mean'''
+	for i in range(len(Dp_std)):
+		self.outlier_score.append(np.linalg.norm(mean-Dp_std[i])**2)
+	self.outlier_score = np.array(self.outlier_score)
+	self.calculations_done=True
+\end{lstlisting}
+
+La implementación del algoritmo se ha realizado en Python como el resto del proyecto y posteriormente se explicará en detalle cómo se ha organizado.
+
+El algoritmo basa su implementación en la librería NumPy.
+
+\section{TRINITY}
+
+Este algoritmo es del segundo tipo que vimos al principio cuando hicimos una categorización de los algoritmos de ensamblaje, en concreto el algoritmo hace una combinación de tres componentes distintos. La intención de hacer esta composición de modelos es intentar obtener todos los tipos de anomalías que se puedan del conjunto y que reciban una puntuación acorde. La teoría nos dice que esta combinación de modelos nos va a proveer de un resultado más robusto que el uso de modelos aislados como discutiremos en la sección de resultados.
+
+En concreto este algoritmo consta de tres componentes distintos:
+
+\begin{itemize}
+	\item Componente basado en distancias: este componente consta de un algoritmo que base su comportamiento en técnicas de agrupamiento o valoración por distancias como por ejemplo es el método clásico KNN. Este método lo que hace es tomar los k vecinos más cercanos y colocar como puntaje de anomalía para esa instancia como la suma de estas distancias. De esta forma los puntos que más alejados estén del resto sumarán una mayor distancia y por tanto serán más anómalos. En concreto este modelo se ha utilizado con el valor $k=5$ y con una técnica de subsampling. La técnica de subsampling consiste en no utilizar todo el conjunto de datos en el algoritmo, si no particionarlo y utilizar una pequeña muestra repitiendo este proceso y haciendo la media de las ejecuciones. De esta forma conseguimos una reducción de la varianza. Esto conlleva algunas ventajas como discutimos en la sección de sesgo y varianza anteriormente. En concreto la técnica toma 1000 particiones, ejecuta el algoritmo sobre ellas y hace la media.
+	\item Componente basado en dependencia: este componente toma un algoritmo como el que hemos implementado (Mahalanobis Kernel). En este componente vamos a intentar detectar las anomalías que corresponden a datos que no siguen las relaciones entre atributos que sí tienen el resto de los objetos. Para ello he utilizado en este componente el algoritmo Mahalanobis Kernel que ya hemos explicado anteriormente incorporando la técnica de subsampling.
+	\item Componente basado en densidad en subespacios: en este componente vamos a incorporar un modelo que intente buscar anomalías que lo sean en base a la densidad que tienen en alguno de los subespacios de los datos. Este hecho no nos debe ser ajeno pues es la segunda de las definiciones que hemos visto de anomalía y que hacía referencia a la función de densidad y los subespacios incorrelados y correlados. En concreto para este componente he utilizado el algoritmo IForest o Isolation Forest. Este algoritmo lo que hace es tomar de forma aleatoria un atributo y se van particionando los valores del mismo en una estructura de árbol, es decir, dividimos los datos en aquellos con un valor superior al marcado para el atributo y con un valor menor. De esta forma podemos medir cuántos pasos o lo que es lo mismo qué profundidad ha alcanzado nuestro árbol hasta llegar a dividir un objeto del resto de los datos. Este algoritmo también incorpora la técnica de subsampling.
+\end{itemize}
+
+Por último con esto hemos obtenido tres vectores o listas con la puntuación que cada componente nos ha arrojado para cada instancia. Para hacerlos comparables lo que debemos hacer es estandarizar los datos a media cero y varianza unitaria. Finalmente se realiza la media de los tres vectores de puntaje siendo esta la puntuación final devuelta por TRINITY.
+
+Veamos la implementación de este algoritmo:
+
+\begin{lstlisting}[language=Python]
+def distanceBased(self):
+	'''
+	@brief Function that implements the distance based component
+	@param self
+	@return It returns the vector with the scores of the instances
+	'''
+	''' Initialize the scores'''
+	scores = np.array([0]*len(self.dataset)).astype(float)
+	for i in range(self.num_iter):
+		knn = KNN(n_neighbors=5, contamination=self.contamination)
+		''' Number in the interval [50, 1000]'''
+		subsample_size = np.random.randint(50, 1001)
+		sample = []
+		if subsample_size>=len(self.dataset):
+			sample = list(range(len(self.dataset)))
+		else:
+			''' Take the sample and train the model'''
+			sample = np.random.choice(len(self.dataset), size=subsample_size, replace=False)
+		knn.fit(self.dataset[sample])
+		''' Update the score to compute the mean'''
+		scores[sample]+=knn.decision_scores_
+	''' Return the mean'''
+	scores = scores/self.num_iter
+	scores = scale(scores)
+	return scores
+
+def dependencyBased(self):
+	'''
+	@brief Function that implements the dependency based component
+	@param self
+	@return It returns the vector with the scores of the instances
+	'''
+	''' Initialize the scores'''
+	scores = np.array([0]*len(self.dataset)).astype(float)
+	for i in range(self.num_iter):
+		kernel_mahalanobis = KernelMahalanobis(contamination=self.contamination)
+		''' Number in the interval [50, 1000]'''
+		subsample_size = np.random.randint(50, 1001)
+		sample = []
+		if subsample_size>=len(self.dataset):
+			sample = list(range(len(self.dataset)))
+		else:
+			''' Take the sample and train the model'''
+			sample = np.random.choice(len(self.dataset), size=subsample_size, replace=False)
+		kernel_mahalanobis.fit(self.dataset[sample])
+		''' Update the score to compute the mean'''
+		scores[sample]+=kernel_mahalanobis.outlier_score
+	''' Return the mean'''
+	scores = scores/self.num_iter
+	scores = scale(scores)
+	return scores
+
+def densityBased(self):
+	'''
+	@brief Function that implements the dependency based component
+	@param self
+	@return It returns the vector with the scores of the instances
+	'''
+	''' Initialize the scores'''
+	scores = np.array([0]*len(self.dataset)).astype(float)
+	for i in range(self.num_iter):
+		iforest = IForest(contamination=self.contamination, behaviour="new")
+		''' Number in the interval [50, 1000]'''
+		subsample_size = np.random.randint(50, 1001)
+		sample = []
+		if subsample_size>=len(self.dataset):
+			sample = list(range(len(self.dataset)))
+		else:
+			''' Take the sample and train the model'''
+			sample = np.random.choice(len(self.dataset), size=subsample_size, replace=False)
+		iforest.fit(self.dataset[sample])
+		''' Update the score to compute the mean'''
+		scores[sample]+=iforest.decision_scores_
+	''' Return the mean'''
+	scores = scores/self.num_iter
+	scores = scale(scores)
+	return scores
+
+def runMethod(self):
+	'''
+	@brief This function is the actual implementation of TRINITY
+	@param self
+	'''
+	''' Distance module'''
+	if self.verbose:
+		print("Obtaining scores with the distance module")
+	distance_based = self.distanceBased()
+	''' dependency module'''
+	if self.verbose:
+		print("Obtaining scores with the dependency module")
+	dependency_based = self.dependencyBased()
+	''' Density module'''
+	if self.verbose:
+		print("Obtaining scores with the density module")
+	density_based = self.densityBased()
+	
+	''' Compute the mean of the three modules'''
+	self.outlier_score=(distance_based + dependency_based + density_based)/3
+	self.calculations_done=True
+\end{lstlisting}
+
+Todos los módulos tienen una función parecida. En primer lugar se inicializan las puntuaciones y se repite el mismo proceso de cálculo 100 veces. Se inicializa el modelo y se ajusta con una muestra de tamaño en el intervalo $[50,1000]$. Por último se hace la media de todos los cálculos y se estandarizan con la librería Sklearn.
+
+En la función principal ``runMethod'' se ejecutan los tres módulos y se hace la media de las puntuaciones.
+
+\section{OUTRES}
+
+Este método entra dentro del segundo de los tipos que hemos visto en la clasificación inicial pues el objetivo es analizar los datos por subespacios. Una de las cosas que podremos ver al final cuando hagamos el estudio de los resultados es lo costoso de estos métodos, siendo este el primero que nos va a servir de ejemplo para visualizar este problema.
+
+En primer lugar cabe decir que en el resto de algoritmos las puntuaciones reflejan el factor de anomalía en orden creciente, es decir, a mayor puntaje más anómalo es el dato y a menor puntaje menos anómalo se dice que es.
+
+En este caso los puntajes van a estar en el intervalo $[0,1]$ siendo $0$ un puntaje para un dato lo más anómalo posible y $1$ un puntaje para un dato lo más normal posible. Daremos razones para que esto sea así cuando veamos el algoritmo.
+
+\begin{algorithm}[H]{\textbf{OUTRES}}
+	
+	\KwIn{o: instancia, S: subespacio}
+	
+	\ForEach{$i\in (D \setminus S)$}{
+	
+		$S' = S\cup \{ i \}$
+		
+		\If{$S'$ es relevante}{
+			
+			$den(o, S') = \frac{1}{n} \sum_{p\in AN(o,S')} K_e (\frac{dist_{S'}(o,p)}{\epsilon (|S'|)})$
+			
+			$dev(o,S') = \frac{\mu - den(o,S')}{2\sigma}$
+			
+			\If{$dev(o,S')\geq 1$}{
+				
+				$r(o) = r(o) \cdot \frac{den(o,S')}{dev(o,S')}$
+				
+			}
+		
+			$OUTRES(o,S')$
+			
+		}
+	
+		\Else{
+		
+			Para recursividad
+		
+		}
+
+	}
+	
+	\KwOut{r: puntajes}
+	
+	\caption{OUTRES}
+	\label{outres}
+\end{algorithm}
+
+En primer lugar tenemos que definir qué son los espacios relevantes. Decimos que un subespacio $S$ es relevante si la proyección sobre ese subespacio no está distribuida de uniformemente. No podemos hacer un test de que toda la proyección esté distribuida uniformemente por lo que nos vamos a valer del siguiente teorema:
+
+\begin{teorema}
+	Sea $S$ un subespacio del conjunto de datos. Si $S$ está distribuido uniformemente entonces $\forall s_i \in S$ tenemos que la proyección uno-dimensional del conjunto de datos sobre $s_i$ está distribuida uniformemente.
+\end{teorema}
+
+Este teorema nos da la siguiente herramienta: si comprobamos que ninguna proyección uno-dimensional está distribuida uniformemente entonces podemos afirmar que $S$ está distribuido uniformemente. Para hacer estas comprobaciones uno-dimensionales lo hemos hecho mediante el test de Kolmogorov-Smirnov. 
+
+Además el algoritmo incorpora un nuevo concepto. Los datos tienen mayor relevancia cuando los consideramos en subespacios y cuando los metemos dentro de lo que los autores llaman vecindarios adaptativos. La definición de un vecindario adaptativo es la siguiente:
+
+\begin{definicion}
+	Definimos para la instancia u objeto $o$ en el subespacio $S$ su vecindario adaptativo como:
+	
+	$$AN(o,S) = \{ p | dist_{S}(o,p)\leq \epsilon (|S|) \}$$
+\end{definicion}
+
+Donde $dist_{S}$ es la función distancia sobre los atributos $S$. Aquí tenemos una distancia máxima definida en función del cardinal del subespacio que viene dada de la siguiente forma:
+
+$$\epsilon (|S|) = 0.5 \cdot \frac{h_{optimal}(|S|)}{h_{optimal}(2)}$$
+
+Donde:
+
+$$h_{optimal} (d) = (\frac{8\Gamma (\frac{d}{2} + 1)}{\pi^{\frac{d}{2}}}(d+4)(2\sqrt{\pi})^d) n^{\frac{-1}{d+4}}$$
+
+Donde $\Gamma$ denota la función gamma y $n$ es el tamaño del conjunto de datos, es decir, el número de objetos o instancias.
+
+Con esto ya tenemos la definición del vecindario adaptativo y el objeto de tenerlo es poder comprobar que el la instancia $o$ es relevante en el subespacio $S$ dentro de su vecindario adaptativo.
+
+En cuanto a la definición de densidad tenemos la función $K_{\epsilon}$ que es el llamado Kernel de Epachenikov. Esta función está definida como:
+
+$$K_{\epsilon}(x) = (1-x^2) \ \forall x<1$$
+
+En cuanto al $\mu$ y $\sigma$ que aparecen en el cálculo de la desviación son la media y la desviación típica de las densidades en el vecindario adaptativo de $o$ en el subespacio $S$. Por tanto con la desviación estamos midiendo cómo de alejada está la instancia $o$ en densidad respecto del resto de las instancias de su vecindario adaptativo. Si esta densidad es mayor a dos desviaciones típicas entonces $dev(o,S')$ será mayor que $1$ y por tanto estaremos ante un dato anómalo.
+
+Si este es el caso, al estar los puntajes de anomalías inicializados a 1 podemos actualizarlo multiplicando por un valor menor estricto que 1. En este caso este valor es $\frac{den(o,S')}{dev(o,S')}$. Como este valor es menor que 1 reducirá el puntaje y lo acercará más a una anomalía. De esta forma cuantas más veces se actualice su puntaje y cuanto menor puntaje obtenga con $\frac{den(o,S')}{dev(o,S')}$ más anómalo consideraremos el dato.
+
+Finalmente si el subespacio era relevante significa que aún podemos aumentar más la dimensionalidad pues puede que nos queden subespacios de mayor orden que sigan sin estar distribuidos según una uniforme.
+
+Como dato cabe decir que el algoritmo empieza en dimensión 2 y no en dimensión 1 pues en una única dimensión no tiene sentido estudiar la densidad ya que no vamos a sacar información de calidad.
+
+Veamos la implementación
+
+\begin{lstlisting}[language=Python]
+def isRelevantSubspace(self, subspace, neighborhood):
+	'''
+	@brief Function that tells if a subspace is relevant, this is that the projection
+	of the dataset over the subspace is not distributed uniformly in the neighborhood
+	@param self
+	@param subspace Subspace to check
+	@param neighborhood neighborhood in which to check the projection
+	@return It returns True if the subspace is relevant, False in other case.
+	'''
+	''' We check first if we have already considered this subspace. If so, it is not relevant anymore.'''
+	for sub in self.checked_subspaces:
+		if len(np.intersect1d(sub, subspace))==len(subspace):
+			return False
+
+	''' Make the projection'''
+	projection = self.dataset[:,subspace][neighborhood]
+	if len(projection)==0:
+		return False
+	''' We check for each subspace if the 1-dimensional data is uniformly distributed'''
+	for i in range(len(subspace)):
+		min = np.amin(projection[:,i].reshape(-1))
+		max = np.amax(projection[:,i].reshape(-1))
+		''' We do it using the Kolmogorov-Smirnov test'''
+		d,p = kstest(projection[:,i], "uniform", args=(min, max-min))
+		''' If the null hypothesis is not rejected, this means the data follow a uniform distribution'''
+		if p<=self.alpha:
+			return False
+	return True
+
+def computeHOptimal(self, d):
+	'''
+	@brief Function that calculates the Hoptimal
+	@param self
+	@param d Parameter, usually the dimensionality of the subspace
+	@return It returns a numerical value.
+	'''
+	f1 = (8*gamma(d/2 + 1))/(np.power(np.pi, d/2))
+	f2 = d+4
+	f3 = np.power(2*np.sqrt(np.pi),d)
+	n = len(self.dataset)
+	f4 = np.power(n, -1/(d+4))
+	return f1*f2*f3*f4
+
+def computeEpsilon(self, subspace):
+	'''
+	@brief Function to compute the epsilon of the adapatative neighborhood
+	@param self
+	@params subspace Subspace considered to compute the epsilon
+	@return It returns a numerical value
+	'''
+	return 0.5*(self.computeHOptimal(len(subspace))/self.computeHOptimal(2))
+
+def computeNeighborhood(self, subspace, instance):
+	'''
+	@brief This function computes the adaptative neighborhood
+	@param subspace Subspace in which to compute the neighborhood
+	@param instance Instance considered as the centroid of the neighborhood (index of the element)
+	@return It returns a numpy array containing the indexes of the neighborhood
+	'''
+	# First we compute the projection
+	projection = self.dataset[:,subspace]
+	# We compute a numpy array of the distances of all the elements to the instance
+	tile = np.tile(projection[instance], len(self.dataset)).reshape((len(self.dataset),len(projection[instance])))
+	distances = np.linalg.norm(projection-tile, axis=1)
+	# We keep only the ones that are close enough (epsilon distance as max)
+	neighborhood = np.where(distances<self.epsilons[len(subspace)])[0]
+	# We exclude the instance itself
+	return neighborhood[neighborhood!=instance]
+
+def computeKernel(self, x):
+	'''
+	@brief Function that computes the Epanechnikov kernel with scalar factor 1
+	@param self
+	@param x Number between 0 and 1.
+	@return It returns a numerical value
+	'''
+	return 1-np.power(x,2)
+
+def computeDensity(self, subspace, neighborhood, instance):
+	'''
+	@brief This is the function that computes the density
+	@param self
+	@param subspace Subspace in which to compute the density
+	@param neighborhood Adaptative neighborhood for the instance in the subspace
+	@param instance Index of the instance considered at the moment
+	@return It return a numerical value.
+	'''
+	# Compute the projection
+	projection = self.dataset[:,subspace]
+	# Compute the density
+	tile = np.tile(projection[instance], len(self.dataset)).reshape((len(self.dataset),len(projection[instance])))
+	return np.sum(self.computeKernel(np.linalg.norm(projection-tile, axis=1))/self.computeEpsilon(subspace))/len(self.dataset)
+
+def computeDeviation(self, subspace, neighborhood, instance, density):
+	'''
+	@brief Function that computes the deviation
+	@param self
+	@param subspace Subspace considered to compute the deviation
+	@param neighborhood Adaptative neighborhood for the instance in the subspace
+	@param instance Instance to compute the deviation
+	@param density Density value of the instance
+	@return It returns a numerical value
+	'''
+	''' First we need to compute the density for all the neighbors'''
+	densities = np.array([])
+	for neig in neighborhood:
+		local_neigborhood = self.computeNeighborhood(subspace, neig)
+		densities = np.append(densities,self.computeDensity(subspace, local_neigborhood, neig))
+	''' We compute the mean and the standard deviation'''
+	mean = np.mean(densities)
+	stdv = np.std(densities)
+	''' Return the deviation'''
+	return (mean-density)/(2*stdv)
+
+def outres(self, instance, subspace):
+	'''
+	@brief Main loop of the outres algorithm
+	@param self
+	@param instance Instance to compute the outres score
+	@param subspace Initial subspace of dimension 1
+	'''
+	''' First we compute the indexes of the features that are not used in the actual subspace'''
+	available_indexes = list(set(list(range(len(self.dataset[0])))).difference(set(list(subspace))))
+	''' For each available index we are going to check'''
+	for index in available_indexes:
+		''' We make the new subspace adding the index'''
+		new_subspace = np.append(subspace, int(index)).astype(int)
+		''' We compute the adaptative neighborhood'''
+		neighborhood = self.computeNeighborhood(new_subspace, instance)
+		''' If the subspace is relevant'''
+		if self.isRelevantSubspace(new_subspace, neighborhood):
+			''' Compute the density and deviation'''
+			density = self.computeDensity(new_subspace, neighborhood, instance)
+			deviation = self.computeDeviation(new_subspace, neighborhood, instance, density)
+			''' If it is a high deviating instance in the subspace then we update the score'''
+			if deviation>=1:
+				if self.verbose:
+					print("The instance " + str(instance+1) + " is outlying in the subspace " + str(new_subspace))
+				''' The scores are equal to 1 at first and 1 means no outlierness and 0 means very outlying'''
+				self.outlier_score[instance]*=density/deviation
+			''' We keep the process if the subspace was relevant'''
+			self.outres(instance, new_subspace)
+		''' We add the subspace to the considered ones'''
+		self.checked_subspaces.append(new_subspace)
+
+
+def runMethod(self):
+	'''
+	@brief This function is the actual implementation of OUTRES
+	'''
+	''' First we compute all epsilons so we dont need to make this calculation more than once'''
+	self.epsilons = [self.computeEpsilon(list(range(n))) for n in range(len(self.dataset[0])+1)]
+	
+	''' We initialize the scores to one'''
+	self.outlier_score = np.ones(len(self.dataset))
+	''' For each instance we run outres'''
+	for i in range(len(self.dataset)):
+		''' Erase checked_subspaces'''
+		self.checked_subspaces = []
+		if self.verbose and i%25==0:
+			print("Computing the instance " + str(i+1) + "/" + str(len(self.dataset)))
+		''' We run for each instance each index'''
+		for j in range(len(self.dataset[0])):
+			self.outres(i,np.array([j]))
+	''' At the end, score 1 means no outlierness and 0 100% outlier. We make 1-score
+	so we can keep the ascending order and now this will mean that 0 is no outlierness
+	and 1 is very outlying.'''
+	self.outlier_score = np.ones(len(self.dataset))-self.outlier_score
+	self.calculations_done=True
+\end{lstlisting}
+
+\section{HICS}
+
+HICS es otra aproximación distinta al estudio por subespacios como ha sido el algoritmo OUTRES. OUTRES intenta encontrar un subespacio interesante en el vecindario de una instancia, es decir, para cada instancia se busca el subespacio interesante para dicha instancia y no tiene por qué ser interesante para ninguna más. Esta aproximación es la opuesta pues la intención es buscar subespacios que sean interesantes en general y hacer una valoración de los datos sobre dichos subespacios.
+
+Este algoritmo además pretende encontrar anomalías basándose en el concepto de densidad como introdujimos en la segunda definición de anomalía. Veamos primero el algoritmo en pseudocódigo para poder ir desgranándolo y explicarlo.
+
+\begin{algorithm}[H]{\textbf{HICS}}
+	
+	\KwIn{D: dataset}
+	
+	$scores = [ \ ]$
+	
+	$sub = $ subespacios de alto contraste
+	
+	\ForEach{$S \in sub$}{
+	
+		Ajustamos un modelo con el algoritmo LOF con la proyección sobre $S$
+		
+		$scores = scores + puntaje \ LOF$
+	
+	}
+
+	$scores = \frac{scores}{|sub|}$
+	
+	\KwOut{scores: puntajes}
+	
+	\caption{HICS}
+	\label{hics}
+\end{algorithm}
+
+Como podemos ver el objetivo de HICS es en primer lugar obtener una serie de subespacios que sean relevantes y que hemos llamado subespacios de alto contraste. Para cada uno de estos subespacios vamos a estudiar la proyección de los datos sobre estos subespacios y vamos a obtener una puntuación de las instancias con el modelo LOF. Finalmente hacemos la media de todos estos puntajes para obtener la puntuación final. 
+
+El modelo original está pensado para funcionar con LOF pero la teoría nos dice que podría funcionar con cualquier modelo basado en proximidad. Por tanto en la implementación desarrollada he incluido los modelos LOF, COF, CBLOF, LOCI, HBOS y SOD como alternativas entre las que elegir para la elección del modelo simple con el que obtener el puntaje.
+
+Veamos ahora el pseudocódigo con el que obtenemos el contraste de un subespacio.
+
+\begin{algorithm}[H]{\textbf{CalcularConstraste}}
+	
+	\KwIn{subespacio: subespacio, M: número de iteraciones del subsampling, $\alpha$: valor para obtener el tamaño de la muestra, $D$: conjunto de datos}
+	
+	$size = n \cdot \sqrt[|subespacio|]{\alpha}$
+	
+	$dev=0$
+	
+	\ForEach{$i\in [1,M]$}{
+	
+	$comp\_atr = aleatorio \ de \ subespacio$
+	
+	$sel\_obj = $ muestra aleatoria de $D$ de tamaño $size$
+	
+	$dev = dev + CalcularDev(comp\_atr, sel\_obj, subespacio, D)$
+	
+	}
+
+	$dev = \frac{dev}{M}$
+	
+	\KwOut{$dev$: contraste}
+	
+	\caption{CalcularConstraste}
+	\label{calcula_contraste}
+\end{algorithm}
+
+En resumen lo que vamos a ir haciendo es aplicar una técnica de subsampling en el algoritmo. Vamos a hacer $M$ ejecuciones para obtener el contraste tomando diferentes muestras de un tamaño fijado de antemano. Con estas muestras vamos a calcular la desviación del atributo de comparación $comp\_atr$ entre las instancias como vamos a ver ahora. Finalmente acumulamos toda esta desviación y obtenemos la media para ese subespacio. Con esto tenemos una medida de cuánto se desvían entre sí las instancias dentro de dicho subespacio.
+
+\begin{algorithm}[H]{\textbf{CalcularDev}}
+	
+	\KwIn{$comp\_atr$: atributo con el que comparar, $sel\_obj$: muestra seleccionada aleatoriamente, $subespacio$: subespacio sobre el que calcular la desviación, $D$: conjunto de datos}
+	
+	$max = 0$
+	
+	\ForEach{$d\in D$}{
+	
+		$cum_1 = \sum_{o\in D} o[comp\_atr]$ si $o[comp\_atr]<d[comp\_atr]$
+		
+		$cum_2 = \sum_{o\in sel\_obj} o[comp\_atr]$ si $o[comp\_atr]<d[comp\_atr]$
+		
+		$f_a = \frac{cum_1}{|D|}$
+		
+		$f_b = \frac{cum_2}{|D|}$
+		
+		$subs = |f_a - f_b|$
+		
+		\If{$subs>max$}{
+			
+			$max = subs$
+		
+		}
+	
+	}
+	
+	\KwOut{max: máxima desviación}
+	
+	\caption{CalcularDev}
+	\label{calcular_dev}
+\end{algorithm}
+
+Con este test lo que estamos haciendo es ver cómo se diferencia el atributo escogido para la comparación con cada instancia del resto del conjunto de datos. La idea es similar a la que expusimos cuando comentamos brevemente los Isolated Forests de ir dividiendo los datos con un valor de corte. 
+
+Ahora ya tenemos las herramientas con las que podemos medir el contraste de un subespacio. Para ver cuáles son aquellos con mayor contraste los autores probaron dos formas quedándose finalmente con la que yo he añadido a la implementación. En primer lugar podemos pensar en algún tipo de cota que se vaya adaptando al número de subespacios o al contraste que estos vayan presentando. Esta idea finalmente fue descartada primero por no funcionar de forma satisfactoria y segundo por la dificultad de elección de la cota. La opción escogida finalmente es evaluar para cada dimensión todos los subespacios posibles, se obtiene el contraste de cada uno de ellos y se toma un número fijo de los primeros. De esta forma obtendremos por ejemplo en cada dimensión 500 candidatos. Una vez que hayamos evaluado todas las dimensiones volvemos a ordenar los subespacios por contraste (ya sin tener en cuenta la dimensionalidad) y nos quedamos con los 1000 primeros. Con esta metodología vamos a tener la certeza de que vamos a quedarnos con los 1000 subespacios con mayor contraste de entre todos los posibles. 
+
+Veamos la implementación del algoritmo.
+
+\begin{lstlisting}[language=Python]
+def computeContrast(self, subspace):
+	'''
+	@brief Function that computes the contrast for a given subspace
+	@param subspace Numpy array with the indexes of the features that define the subspace
+	@return It returns a float representing the contrast of the subspace
+	'''
+	''' We set the adaptative size of the test'''
+	size = int(len(self.dataset)*np.power(self.alpha, len(subspace)))
+	''' Number of instances in the dataset'''
+	N = len(self.dataset)
+	deviation = 0
+	''' We repeat the process M times'''
+	for i in range(1,self.M+1):
+		''' This is the comparison attribute for the test, so it will stay untouched'''
+		comparison_attr=np.random.randint(low=0, high=len(subspace))
+		''' List of booleans that masks the instances of the dataset selected'''
+		selected_objects = np.array([True]*N)
+		''' Select random indexes'''
+		selected_objects[reduce(np.union1d,np.array([np.random.choice(N,size=size,replace=False) for _ in range(len(subspace)-1)]))]=False
+		''' With the sample given by the mask selected_objects we compute the deviation'''
+		deviation+=self.computeDeviation(subspace[comparison_attr], selected_objects, subspace)
+	''' Finally the contrast is the average of all deviations'''
+	return deviation/self.M
+
+def computeDeviation(self, comparison_attr, selected_objects, subspace):
+	'''
+	@brief Function that computes the deviation of the marginal distribution
+	given a fixed attribute, a sample and the condition given as a subspace
+	@param comparison_attr This is the comparison attribute
+	@param selected_objects Mask that sets a sample of the dataset
+	@param subspace Subspace or condition to calculate the deviation
+	@return It returns a float giving the deviation
+	'''
+	max = 0
+	''' For each instance of the dataset'''
+	for d in self.dataset:
+		''' This is the cumulative value for all elements in the dataset'''
+		cumul1 = np.sum(self.dataset[:,comparison_attr][self.dataset[:,comparison_attr]<d[comparison_attr]])
+		''' This is the cumulative value for the selected_objects aka the sample'''
+		sel = self.dataset[:,comparison_attr][selected_objects]
+		cumul2 = np.sum(sel[sel<d[comparison_attr]])
+		''' Finally we compute the average in both cases'''
+		fa = cumul1/len(self.dataset)
+		fb = cumul2/len(self.dataset)
+		''' The difference in absolute value is the deviation'''
+		subs = np.absolute(fa-fb)
+		''' We return the biggest of the deviations obtained'''
+		if subs>max:
+			max = subs
+	return max
+
+def hicsFramework(self):
+	'''
+	@brief This function computes the high contrast subspaces on which to score the outlier
+	@return It returns a numpy array containing the high contrast subspaces
+	'''
+	''' Ordered subspaces by dimension type: list of numpy arrays of numpy arrays
+	 this means that in each positions there would be the subspaces of the corresponding
+	 dimension in the form of a list of subspaces which are numpy arrays'''
+	all_subspaces = []
+	''' Record of the contrast for each subspace in each dimension, same shape as all_subspaces'''
+	all_contrasts = []
+	''' For all dimensions starting from dimension 2 (correlation has no sense on dimension 1)'''
+	for dimension in range(2,len(self.dataset[0])):
+		if self.verbose:
+			print("Computing subspaces in dimension " + str(dimension) + "/" + str(len(self.dataset[0])))
+		candidates = []
+		contrasts = []
+		''' This list will keep the indexes of the redundant subspaces, those are d-dimensional subspaces with d+1-dimensional
+		 subspaces containing them with higher contrast'''
+		redundant = []
+		''' For dimension 2 we just obtain all possible indexes and make all combinations'''
+		if dimension==2:
+			''' Calculate the candidates as all possible combinations'''
+			indexes = list(range(len(self.dataset[0])))
+			candidates = np.array([np.array(list(comb)) for comb in list(combinations(indexes,dimension))])
+			''' Compute the contrasts'''
+			cont = 0
+			p = Pool(self.numThreads)
+			while cont+self.numThreads<len(candidates):
+				contrasts = contrasts + p.map(self.computeContrast,candidates[cont:cont+self.numThreads])
+				cont+=self.numThreads
+				print("Computed " + str(cont) + "/" + str(len(candidates)))
+			p = Pool(len(candidates)-cont)
+			contrasts = contrasts + p.map(self.computeContrast,candidates[cont:])
+			print("Computed " + str(len(candidates)) + "/" + str(len(candidates)))
+		else:
+			''' We need to calculate now the indexes starting from a previous subspace
+			 We record the parent of each subspace to check for redundancy'''
+			parents = []
+			''' For all subspaces with one dimension less'''
+			for i in range(len(all_subspaces[-1])):
+				''' We only consider new indexes, those are the ones not uses in the father subspace'''
+				indexes = list(set(list(range(len(self.dataset[0])))).difference(set(all_subspaces[-1][i])))
+				''' For each new index'''
+				for ind in indexes:
+				''' We calculate the new candidate as the same subspace appending the index'''
+				new_can = np.append(all_subspaces[-1][i],ind)
+				''' Now we check that the candidate wasn't in the list before'''
+				new = True
+				for previous in candidates:
+					if len(np.intersect1d(previous,new_can))==len(new_can):
+						new = False
+				if new:
+					candidates.append(new_can)
+					parents.append(i)
+			''' Compute the contrasts'''
+			cont = 0
+			p = Pool(self.numThreads)
+			while cont+self.numThreads<len(candidates):
+				contrasts = contrasts + p.map(self.computeContrast,candidates[cont:cont+self.numThreads])
+				cont+=self.numThreads
+				print("Computed " + str(cont) + "/" + str(len(candidates)))
+			p = Pool(len(candidates)-cont)
+			contrasts = contrasts + p.map(self.computeContrast,candidates[cont:])
+			print("Computed " + str(len(candidates)) + "/" + str(len(candidates)))
+			
+			''' Check for redundancy'''
+			for i in range(len(parents)):
+				if contrasts[i]>all_contrasts[-1][parents[i]]:
+					redundant.append(parents[i])
+		
+		candidates = np.array(candidates)
+		contrasts = np.array(contrasts)
+		''' If there are redundant subspaces'''
+		if redundant!=[]:
+			if self.verbose:
+				print("Now deleting redundant subspaces in dimension " + str(dimension) + ", " + str(len(redundant)) + " subspaces removed.")
+		''' Delete those ones'''
+		non_redundant_sub = np.delete(all_subspaces[-1], redundant)
+		''' Update the subspaces'''
+		all_subspaces[-1]=non_redundant_sub
+		''' Sort from higher contrast to lower and only get numCandidates number of subspaces if available'''
+		if len(candidates)>self.numCandidates:
+			all_subspaces.append(candidates[contrasts.argsort()[-self.numCandidates:][::-1]])
+			all_contrasts.append(contrasts[contrasts.argsort()[-self.numCandidates:][::-1]])
+		else:
+			all_subspaces.append(candidates)
+			all_contrasts.append(contrasts)
+	''' We flatten the numpy array to obtain only a list of subspaces and contrasts'''
+	subspaces = np.array(all_subspaces).flatten()
+	contrasts = np.array(all_contrasts).flatten()
+	''' We only give the maxOutputSpaces with higher contrast if available'''
+	if len(subspaces)>self.maxOutputSpaces:
+		return subspaces[contrasts.argsort()[-self.maxOutputSpaces:][::-1]]
+	return subspaces
+
+def runMethod(self):
+	'''
+	@brief This function is the actual implementation of HICS
+	'''
+	if self.verbose:
+		print("Calculating the subspaces\n")
+	''' First we obtain the high contrast subspaces'''
+	subspaces = self.hicsFramework()
+	
+	if self.verbose:
+		print("Now calculating the scoring\n")
+	''' We initialize the scores for each instance as 0'''
+	scores = np.zeros(len(self.dataset))
+	''' For each subspace'''
+	for sub in subspaces:
+		''' We place the corresponding scorer according to parameter'''
+		scorer = None
+		if self.outlier_rank=="lof":
+			scorer = LOF()
+		elif self.outlier_rank=="cof":
+			scorer = COF()
+		elif self.outlier_rank=="cblof":
+			scorer = CBLOF()
+		elif self.outlier_rank=="loci":
+			scorer = LOCI()
+		elif self.outlier_rank=="hbos":
+			scorer = HBOS()
+		elif self.outlier_rank=="sod":
+			scorer = SOD()
+		''' Fits the scorer with the dataset'''
+		scorer.fit(self.dataset[:,sub])
+		''' Adds the scores obtained to the global ones'''
+		scores = scores+scorer.decision_scores_
+	''' Compute the average'''
+	self.outlier_score = scores/len(subspaces)
+	''' Marks the calculations as done'''
+	self.calculations_done=True
+\end{lstlisting}
+
+\section{LODA}
+
+LODA es un algoritmo que entra en la categoría de los algoritmos que involucran histogramas. Aún no hemos visto ningún algoritmo de este tipo, por lo que no hemos discutido el funcionamiento de estos algoritmos. Cuando hacemos un histograma de los datos estudiamos la distribución de probabilidad de los datos y por tanto podemos ver si éstos están en las colas en algún atributo o proyección o si están en el centro de la distribución. Con esto podemos saber si el dato es o no anómalo. En concreto LODA emplea una serie de proyecciones uno-dimensionales sobre las que se estudia la distribución. 
+
+En primer lugar vamos a ver cómo se obtienen los vectores que nos dan las proyecciones uno-dimensionales.
+
+\begin{algorithm}[H]{\textbf{ProyeccionesAleatorias}}
+	
+	\KwIn{$d$: dimension, $D$: dataset, $k$: número de histogramas y proyecciones}
+	
+	$no\_neg = [\sqrt{d}]$
+	
+	$proyecciones = [ \ ]$
+	
+	\ForEach{$i\in [1,k]$}{
+	
+		$ind = $ $no\_neg$ indices aleatorios en $[0,d]$
+		
+		$proy = $ vector con ceros en todas las posiciones menos en ind, donde hay valores sacados de una normal $\mathcal{N}(0,1)$
+		
+		$proyecciones = [proecciones, proy]$
+
+	}
+	
+	\KwOut{$proyecciones$: proyecciones}
+	
+	\caption{ProyeccionesAleatorias}
+	\label{proyecciones_aleatorias}
+\end{algorithm}
+
+En LODA tenemos un parámetro $k$ que nos indica el número de proyecciones e histogramas que vamos a desarrollar. Esto nos va a dar más o menos muestras como haríamos con una técnica de subsampling tradicional. 
+
+Una vez que tenemos estos vectores de proyección vamos a ver cómo generamos los histogramas a partir de ellos.
+
+\begin{algorithm}[H]{\textbf{ObtenerHistogramas}}
+	
+	\KwIn{$D$: dataset, $\{w_i\}_{i=1}^{k}$: vectores de proyecciones, $k$: numero de histogramas y vectores de proyección}
+	
+	Inicializamos los histogramas $\{h_i\}_{i=1}^{k}$
+	
+	\For{$j=1 \rightarrow |D|$}{
+	
+		\For{$i=1\rightarrow k$}{
+		
+			$z_i = x_j^T w_i$	
+			
+			Actualiza el histograma $h_i$ con $z_i$
+
+		}
+
+	}
+	
+	\KwOut{$\{h_i\}_{i=1}^{k}$: histogramas}
+	
+	\caption{ObtenerHistogramas}
+	\label{obtener_histogramas}
+\end{algorithm}
+
+Con esto ya tenemos tanto las proyecciones como los histogramas, por lo que sólo queda ver cómo obtenemos las puntuaciones de anomalías de los datos.
+
+\begin{algorithm}[H]{\textbf{LODA}}
+	
+	\KwIn{$x$: instancia, $\{h_i\}_{i=1}^{k}$: histogramas, $\{w_i\}_{i=1}^{k}$: vectores de proyección}
+	
+	\For{$i=1\rightarrow k$}{
+	
+		$z_i = x^T w_i$
+		
+		Obtenemos $p_i = p_i (z_i)$ del histograma $h_i$
+
+	}
+
+	$f = \frac{-1}{k} \sum_{i=1}^{k}\log (p_i (z_i))$
+	
+	\KwOut{$f$: puntaje de anomalía de $x$}
+	
+	\caption{LODA}
+	\label{loda}
+\end{algorithm}
+
+Finalmente ya tenemos el algoritmo LODA completo. Cuando estamos evaluando una instancia obtenemos la probabilidad de que su proyección uno-dimensional ocurra. Con esta probabilidad si hacemos el logaritmo cuanto más cerca esté de $0$ más cerca estará el valor de $-\infty$ y por tanto mayor va a ser nuestro puntaje anómalo de dicha instancia.
+
+Ahora que ya tenemos el algoritmo completo vamos a ver la implementación:
+
+\begin{lstlisting}[language=Python]
+def getRandomProjections(self, dimension):
+	'''
+	@brief Function that computes and returns the random projections
+	@param self
+	@param dimension Dimensionality of the dataset (int)
+	@return It returns a list with numpy arrays as projections
+	'''
+	''' Number of non-negative elements in the projection'''
+	non_neg = int(np.ceil(np.sqrt(dimension)))
+	projections = []
+	''' We are going to compute k projections'''
+	for i in range(self.k):
+		''' Select non_neg random indexes to make the projection'''
+		ind = np.random.choice(dimension, replace=False, size=non_neg)
+		''' Initialize it to zeroes'''
+		proj = np.zeros(dimension)
+		''' The non-negative elements are drawn from a normal distribution'''
+		proj[ind]=np.random.normal(size=non_neg)
+		projections.append(proj)
+	return projections
+
+def getBin(self, hist_limits, value):
+	'''
+	@brief Function that given a value, it returns the bin it belongs to for the histogram
+	@param self
+	@param hist_limits Limits for each bin of the histogram
+	@param value Value to check for the bin
+	@return It returns the index corresponding to the bin
+	'''
+	bin=-1
+	for i in range(len(hist_limits)):
+		if value<hist_limits[i]:
+			bin=i
+			break
+	return bin-1
+
+def runMethod(self):
+	'''
+	@brief This is the implementation of the LODA algorithm
+	'''
+	''' We compute first all projections'''
+	random_projections = self.getRandomProjections(len(self.dataset[0]))
+	''' Initialize the histograms and the projected data'''
+	histograms = [[]]*self.k
+	Z = [[]]*self.k
+	''' For each instance of the dataset'''
+	for j in range(len(self.dataset)):
+		''' For each projection'''
+		for i in range(self.k):
+			''' Compute the 1D projection'''
+			Z[i].append(np.dot(self.dataset[j].T, random_projections[i]))
+	''' Compute the k histograms with the data'''
+	for i in range(self.k):
+		histograms[i]=np.histogram(Z[i], bins = self.n_bins)
+	
+	''' Initialize the scores to zero'''
+	self.outlier_score = np.array([0]*len(self.dataset)).astype(float)
+	''' For each instance'''
+	for i in range(len(self.dataset)):
+		prob = []
+		''' For each histogram'''
+		for j in range(self.k):
+			''' Compute the projection'''
+			z = np.dot(self.dataset[i].T, random_projections[j])
+			''' Check the bin for the projection'''
+			bin = self.getBin(histograms[j][1], z)
+			''' Obtain the probability linked to z in the histogram'''
+			prob.append(histograms[j][0][bin]/np.sum(histograms[j][0]))
+		prob = np.array(prob)
+		''' Compute the score with the probabilities'''
+		if 0. in prob:
+			self.outlier_score[i] = float("inf")
+		else:
+			self.outlier_score[i] = -np.sum(np.log(prob))/self.k
+	self.calculations_done=True
+\end{lstlisting}
+
+\section{Implementación}
+
+Todos los algoritmos están implementados utilizando una clase base llamada EnsembleTemplate:
+
+\begin{lstlisting}[language=Python]
+class EnsembleTemplate:
+'''
+Template class for the ensemble anomaly detectors.
+'''
+
+def __init__(self, contamination=0.1):
+	'''
+	Init template
+	'''
+	pass
+
+def fit(self, dataset):
+	'''
+	Function to set the dataset and execute the algorithm
+	'''
+	self.dataset = dataset
+	self.outlier_score = [0]*len(self.dataset)
+	self.outliers = []
+	self.runMethod()
+	return self
+
+def runMethod(self):
+	'''
+	Function to run the method implemented
+	'''
+	pass
+
+def getRawScores(self):
+	'''
+	Function that gets the raw scores
+	'''
+	return self.outlier_score
+
+def getOutliersBN(self, noutliers):
+	'''
+	Function that gets the noutliers instances of the most outlying data
+	'''
+	return self.outliers
+
+def getOutliers(self):
+	pass
+\end{lstlisting}
+
+El esqueleto de todas las clases que implementan los algoritmos de los que hemos hablado es este. En primer lugar todas las clases tienen un constructor en el que se pasan los parámetros de los modelos en caso de haberlos. En segundo lugar tenemos una función fit. El cometido de esta función es inicializar las puntuaciones, pasar el dataset al objeto de la clase para que se guarde y por último ejecutar el método que implementa.
+
+La función principal es la función runMethod que es la que implementa la ejecución del algoritmo en sí. Esta función no está pensada para ser llamada externamente si no desde fit. 
+
+Por último tenemos tres funciones más. La primera de ellas nos da el vector que contiene los puntajes de las anomalías. La segunda función nos da los ``noutliers'' elementos con mayor puntaje y la tercera nos devuelve las instancias anómalas basándose en un parámetro que llamamos contaminación. 
+
+El parámetro de contaminación no es más que una estimación del porcentaje de anomalías que pensamos que va a tener el conjunto de datos. Por tanto si el parámetro de contaminación fuera por ejemplo $0.1$ entonces esta función devolvería el primer $10\%$ con mayor valor de puntaje de anomalía.
+
+Toda la implementación del trabajo se encuentra alojada en GitHub en \href{https://github.com/nacheteam/Ensemble-Outlier-Analysis}{\textbf{\underline{este repositorio}}}.
