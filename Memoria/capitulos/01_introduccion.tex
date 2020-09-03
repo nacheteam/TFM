@@ -36,15 +36,19 @@ El trabajo contiene una primera sección en la que se incluye una introducción 
 
 Todos estos conocimientos están basados en la teoría estadística de Vapnik y Chervonenkis que es brevemente repasada y en la que se dan cotas sobre el aprendizaje y su rendimiento. Esta introducción ha sido escrita basándose en tres libros: Learning from Data de Yaser Abu-Mostafa \cite{yaser_learning_2012}, Learning from Data de Cherkassky y Mulier \cite{cherkassky_learning_2007}  y Outlier Ensembles de Aggarwal y Sathe \cite{aggarwal_outlier_2017}.
 
-Este marco nos dirige hacia la primera definición del concepto de anomalía que está basada en distancias y rangos intercuartil que se describen en el libro Outlier Analysis \cite{aggarwal_outlier_2017-1}.
+Este marco nos dirige hacia la primera definición del concepto de anomalía que está basada en distancias y rangos intercuartil que se describen en el libro Outlier Analysis \cite{aggarwal_outlier_2017-1}. Además se introduce el tipo de datos que vamos a encontrar en el marco del estudio: las series temporales.
 
 Para dar una definición alternativa y una buena introducción para los modelos debemos hacer una breve introducción estadística. En esta introducción se define un vector aleatorio así como su función de densidad, su función característica y su función de distribución. Se refieren los conceptos de independencia y probabilidad y esperanza condicionada. Por último y aprovechando este contexto se enuncian y demuestran algunas desigualdades y fórmulas famosas. Este contenido viene dado por los apuntes de la asignatura Estadística Multivariante del grado en Matemáticas, los apuntes de la asignatura Procesos Estocásticos del grado en Matemáticas y el libro Probability Theory de M. Loève \cite{m._loeve_probability_1977}.
 
 Tras esto puede ser introducido el concepto probabilístico y basado en densidad de una anomalía. Este concepto viene apoyado en el paper \cite{fabian_keller_hics:_2012} que describe el algoritmo HICS.
 
-Con los dos conceptos de probabilidad y el marco teórico ya planteado se introducen los modelos implementados y el concepto de algoritmos de ensamblaje. Estos conceptos sobre los algoritmos vienen de los libros Outlier Analysis \cite{aggarwal_outlier_2017-1} y Outlier Ensembles \cite{aggarwal_outlier_2017}. Se aporta en esta sección la explicación teórica de cada modelo así como la implementación desarrollada por mí mismo en Python. Los artículos en los que se basa cada algoritmo son \cite{fabian_keller_hics:_2012}, \cite{aggarwal_outlier_2017}, \cite{pevny_loda:_2016} y \cite{muller_statistical_2011}.
+Tras este marco teórico de aprendizaje, estadística multivariante y definiciones de anomalías introducimos los conocimientos necesarios de Deep Learning para el desarrollo y entendimiento de los modelos no supervisados implementados. Esta sección hace una revisión de cómo funcionan las redes neuronales, distintos tipos de capas empleados en las arquitecturas implementadas y algunas arquitecturas con mayor fundamentación académica como los Autoencoder. Esta sección se apoya en el libro Deep Learning de Goodfellow, Bengio y Courville \cite{goodfellow_deep_2016}, el libro Deep Learning with Tensorflow de Zaccone, Karim y Menshawy \cite{giancarlo_deep_2017} y la revisión sobre modelos Autoencoder de D. Charte, F. Charte, García, Mª J. del Jesus y F. Herrera \cite{david_practical_2018}.
 
-Finalmente se analiza el comportamiento de todos los modelos en la sección de resultados frente a los algoritmos considerados como clásicos. Se aportan conclusiones tras todo el trabajo y, al haber margen de mejora, se aportan algunas ideas que podrían aplicarse en un futuro para desarrollar un modelo propio.
+La siguiente sección analiza y explica los modelos implementados con su código propio. Esta sección se apoya en varios artículos como \cite{lih_oh_automated_2018} o \cite{david_practical_2018} para obtener las arquitecturas empleadas y aplicarlas al ámbito no supervisado que necesitamos.
+
+La siguiente sección explica cómo se integran los algoritmos de detección de anomalías para poder ser empleados para detectar los mantenimientos y cómo obtenemos etiquetas de los datos.
+
+Tras esto se exponen los resultados obtenidos así como la metodología de la experimentación para finalizar con las conclusiones y trabajo futuro derivados del estudio.
 
 \section{Objetivos}
 
