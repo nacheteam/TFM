@@ -1,0 +1,36 @@
+\chapter{Conclusiones y Trabajo Futuro}
+\label{chapter:conclusiones-trabajo-futuro}
+
+En este capítulo vamos a exponer las conclusiones obtenidas del anterior estudio, así como el trabajo futuro directo implicado por las conclusiones y los pasos naturales a seguir.
+
+\section{Conclusiones}
+
+El estudio ha versado sobre la efectividad de algunos métodos de detección de anomalías clásicos sobre un problema no supervisado de mantenimiento predictivo sobre una serie temporal real de una máquina industrial de la compañía ArcelorMittal. El hecho de que el problema sea un problema real y no académico es la posibilidad de ver su utilidad en una aplicación empresarial. Este trabajo ha sido muy enriquecedor y me ha permitido ver el potencial de los modelos Deep Learning sin desprestigiar algunos métodos clásicos de detección de anomalías que permanecen en un nivel de desempeño cercano.
+
+La primera conclusión que podemos sacar de este estudio es que el mejor modelo en desempeño ha resultado ser el modelo de predicción CNN-LSTM. En la sección anterior hemos podido analizar el desempeño de todos los modelos desde el punto de vista de varias métricas para analizar en profundidad los mismos. El modelo de predicción CNN-LSTM ha resultado ser el modelo más equilibrado de todos los analizados así como el mejor modelo en algunas de las métricas que hemos empleado. Además hemos podido ver que su consumo de tiempo en la predicción es muy bajo comparado con el resto de modelos clásicos y Deep Learning.
+
+Lo siguiente que hemos podido ver es que los modelos Deep Learning tienen un buen potencial y merece la pena considerarlos para este tipo de problemas. En concreto hemos podido ver que los dos mejores modelos en desempeño han sido los modelos basados en predicción seguidos por el Autoencoder con capas LSTM. No debemos desechar ninguna de las dos propuestas (predicción y autoencoder) pues han demostrado ambas su potencial.
+
+En cuanto a los modelos clásicos tenemos a HBOS y KNN que nos han dado los mejores resultados entre ellos. Estos resultados están un poco enturbiados por la cantidad de falsos positivos que arrojan, lo que nos dice que tienen tendencia a dar demasiadas alarmas y por tanto aciertan muchos mantenimientos pero dan muchos falsos positivos.
+
+Si comparamos internamente los modelos Deep Learning hemos podido comprobar que los modelos de predicción se comportan mejor que los modelos Autoencoder en general. 
+
+Durante el desarrollo del estudio comentamos que este problema era como un puzle, en el que tenemos nuestro algoritmo de detección de anomalías acompañado del algoritmo de obtención de etiquetas de anomalías y el algoritmo de detección de eventos anómalos que nos alerta de un mantenimiento. En este estudio hemos podido ver cómo las métricas de los modelos han estado muy cerca en algunos casos, lo que nos está indicando que no sólo el modelo es importante, si no que la pieza de detección de eventos anómalos es fundamental y debemos también optimizarla y pensar en ella como algo fundamental.
+
+Finalmente cabe recalcar de nuevo la importancia del estudio. Estamos ante un caso de aplicación real de estos métodos generando utilidad a la empresa. Si somos capaces de detectar los mantenimientos antes de que ocurran estamos indicando cuándo vamos a tener que hacer una parada de la máquina y por tanto podemos evitar algún fallo catastrófico que pare completamente el proceso de producción. Esto se traduce en ahorro de dinero y de tiempo, en consecuencia es un mayor beneficio para la empresa.
+
+\section{Trabajo Futuro}
+
+En esta sección vamos a discutir los pasos naturales a seguir en la evolución de este trabajo. Con lo que hemos conseguido hasta ahora tenemos unos buenos resultados, pero hay mucho que mejorar y posibilidad para ello.
+
+En primer lugar, un problema común a todos los modelos es que arrojan un número excesivo de falsos positivos. Para poder solventar esto tenemos muchos algoritmos que nos ayudan a la mitigación de falsos positivos, como los mencionados en la revisión de Zohrevand y Glässer \cite{zahra_should_2019}. Este es un paso natural y, al afectar a todos los modelos, debemos empezar por este paso para solucionarlo cuanto antes.
+
+El trabajo no tiene una comprobación exhaustiva de los parámetros de los modelos, pues el sistema de cuantificación consume un tiempo elevado y no resulta sencillo automatizarlo. Aún así merece la pena dedicar tiempo a esta tarea y a su cómputo para poder mejorar aún más el desempeño de los modelos y llevarlos al límite. Puede que con este paso consigamos de por sí una reducción de los falsos positivos si los introducimos en la métrica a maximizar.
+
+Por otro lado se ha hecho una revisión de 5 arquitecturas Deep Learning, pero tenemos muchas más que explorar e incluso generalizar aún más las ya propuestas. Por ejemplo no tenemos modelos de encoding-decoding asimétricos o modelos CNN con agrupaciones distintas al máximo o modelos con otros tipos de capas recurrentes como por ejemplo las capas Transformer. Es por esto que merece la pena investigar y estudiar nuevas capas y arquitecturas para poder introducirlas en la comparativa.
+
+Durante este estudio también ha surgido la idea de realizar una nueva arquitectura no supervisada propia de detección de anomalías. Esta arquitectura se basaría en ordenar los datos para formar una imagen con un lote temporal de datos ordenando las variables de forma que pudiéramos hacer convoluciones de dos dimensiones para extraer características y después emplear capas LSTM y capas densas o sólo capas densas para realizar predicciones y/o reconstrucciones de las instancias de datos.
+
+También surge como algo natural integrar un sistema de test y train secuencia. Lo normal es que nuestro modelo pruebe datos en tiempo real y vaya prediciendo sobre los mismos. Una vez que los operarios han etiquetado correctamente el mantenimiento y se añaden los datos a la base de datos, podemos emplearlos en el entrenamiento del modelo. De esta forma estamos constantemente añadiendo nuevos datos al mismo, con lo que si hubiera un cambio de concepto leve pero persistente podemos corregir el modelo. Esta filosofía de trabajo se conoce como Test-Then-Train.
+
+Por último, para poder analizar los verdaderos positivos, falsos positivos, verdaderos negativos y falsos negativos de forma adecuada surge la curiosidad de ver qué pasa si los unimos. Por ejemplo, podemos tener muchos falsos positivos pegados en el tiempo y por tanto podríamos unirlos para poder estudiar todo esto por intervalos completos de tiempo. Cabe la duda de cómo ponderar esto en la métrica (no es lo mismo fallar en un intervalo pequeño que en uno de mayores dimensiones temporales) pero puede resultar muy útil para estudiar los periodos temporales en los que nuestro modelo falla.
