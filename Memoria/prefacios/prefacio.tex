@@ -19,13 +19,33 @@ Ignacio Aguilera Martos\\
 \end{center}
 
 %\vspace{0.7cm}
-\noindent{\textbf{Palabras clave}: % RELLENAR CON LAS PALABRAS CLAVE EN ESPAÑOL
+\noindent{\textbf{Palabras clave}: anomalía, alarma, mantenimiento, mantenimiento predictivo, aprendizaje automático, aprendizaje profundo, red neuronal, tensorflow, keras.
 			}\\
 
 \vspace{0.7cm}
 \noindent{\textbf{Resumen}}\\
 
-% RELLENAR CON EL ABSTRACT EN ESPAÑOL
+La detección de anomalías es un ámbito de estudio de la Ciencia de Datos que está ganando cada vez más peso. Este área puede ser abordada de distintas formas con distintas definiciones, ya que incluso podemos considerar un problema de clasificación muy desbalanceada como un problema de detección de anomalías supervisado. Lo más común es encontrarnos con un conjunto de datos sin etiquetas y nuestro objetivo es descubrir entre estos datos aquellos que son dan diferentes del resto que podemos considerarlos como anomalías. A menudo estas anomalías no son evidentes, ya que si lo fuesen no serían de especial interés, y es aquí donde entra la posibilidad de aplicar algoritmos autónomos que puedan detectar estas anomalías y puntuarlas. Con esto lo que obtenemos no es una clasificación como tal, si no una serie de puntuaciones para cada uno de los datos que tenemos que nos indica cuán anómalo es cada dato. A mayor puntuación más anómalo resulta el mismo.
+
+La utilidad de estos algoritmos es muy variada. Podemos emplear estos algoritmos para detectar fraudes bancarios en función el uso anómalo de los supuestos clientes observando por ejemplo el uso de la tarjeta de crédito. Podemos emplearlos para detectar pacientes con patologías graves y/o extrañas entre un grupo de pacientes normales, por ejemplo podríamos emplear los datos de corazón de pacientes sanos y pacientes enfermos para intentar distinguir los más graves entre los enfermos. El número de aplicaciones de estos algoritmos es muy amplio, pero en este caso nos vamos a centrar en una de las posibles aplicaciones de los algoritmos de detección de anomalías: el mantenimiento predictivo.
+
+El mantenimiento predictivo consiste en intentar detectar las roturas de una máquina o dispositivo antes de que estas se produzcan debido al uso o desgaste del mismo. Dependiendo de la naturaleza de las roturas que queramos detectar esto puede ser estudiado como un cambio de concepto en los datos (debida a una desviación ligera y continuada en el tiempo) o como detección de anomalías (si el cambio es más repentino) aunque podríamos enfocar las dos posibilidades desde la detección de eventos anómalos.
+
+En el estudio que planteamos se utilizan los datos de maquinaria de la empresa ArcelorMittal. Estos datos contienen mediciones de una cierta máquina de la empresa y nuestro objetivo será detectar cuándo los datos se desvían de lo normal y por tanto indican un mal funcionamiento de la maquinaria que puede derivar en una parada para mantenimiento. 
+
+Para poder abordar este problema primero vamos a hacer un repaso extenso del marco teórico del mismo. Este marco nos va a delimitar los conceptos empleados de aprendizaje automático en general. Acompañando a esta sección tendremos definiciones de anomalías así como un breve repaso de algunos concepto de estadística multivariante que me han sido necesarios para dar definiciones alternativas de anomalías y poder estudiar los modelos empleados.
+
+Como secciones centrales tendremos un breve repaso teórico del Aprendizaje Profundo así como los modelos implementados basándose en la teoría descrita previamente. Finalmente tendremos la explicación de la experimentación y resultados obtenidos en el estudio.
+
+Para concretar un poco más se han implementado 5 modelos Deep Learning que se contrapondrán a una serie de modelos clásicos adaptados para funcionar con series temporales, ya que esta es la naturaleza de los datos que definen el problema. Los modelos implementados hacen uso de tres tipos principales de capas o neuronas: totalmente conectadas, convolucionales y LSTM. En concreto se implementa un modelo Autoencoder de capas totalmente conectadas que reconstruye instancia a instancia, un modelo Autoencoder de capas totalmente conectadas que reconstruye las instancias por lotes, un modelo Autoencoder de capas LSTM que reconstruye las instancias por lotes y dos modelos de predicción empleando capas LSTM y convolucionales con LSTM.
+
+Los modelos Autoencoder se van a encargar de intentar reconstruir los datos haciendo una codificación previa de los mismos y vamos a analizar el error que cometen estos modelos al reconstruir las instancias. A mayor error cometido en la reconstrucción más anómalos o extraños son los datos y por tanto mayor puntuación tendrán. Por otro lado, los modelos de predicción aprenden a predecir los datos en una situación normal. Cuando tengamos datos que no sean normales tendremos un error grande en la predicción y por tanto la reconstrucción dada será peor dando como resultado una mayor puntuación.
+
+En el estudio veremos cómo el algoritmo elegido para obtener las puntuaciones no es la única pieza del puzle. Cuando tenemos las puntuaciones debemos obtener los periodos temporales que consideramos como alertas y por tanto, los periodos en los que el algoritmo daría la alarma a los operarios de la máquina. Explicaremos este algoritmo con mayor detenimiento en las siguientes secciones, pero básicamente vamos a necesitar dos piezas principalmente. La primera de ellas será la encargada de tomar las puntuaciones que nos de nuestro algoritmo de detección y de anomalías y las transformará en etiquetas. Esto lo que quiere decir es que, mediante un sistema de cotas adaptable, vamos a establecer la cota de cuándo una puntuación se considera suficientemente anómala para decir que una instancia lo es y por tanto poder marcarla como tal. De esta forma, al final del proceso, obtenemos una clasificación de los datos como anómalos y normales. Tras esto la siguiente pieza del puzle se encarga de establecer las franjas temporales en las que daremos la alarma. Si tenemos muchas instancias anómalas aglomeradas en una misma franja temporal entonces tenemos una ventana temporal anómala y por tanto daremos alarma con la misma.
+
+La característica y dificultad principal del problema es que es no supervisado, pues no tenemos etiquetas de cuándo deberíamos de dar una alarma o alerta y cuándo lo estamos haciendo bien y mal. Esto nos fuerza a tener que definir un poco mejor el problema e intentar solventar esto para poder obtener mediciones de cómo de bien o mal funcionan nuestros algoritmos y poder evaluarlos.
+
+A lo largo del trabajo veremos y solventaremos todos estos pasos para poder dar una conclusión sobre la utilidad del estudio.
 
 \cleardoublepage
 
@@ -41,13 +61,33 @@ Ignacio Aguilera Martos\\
 \end{center}
 
 %\vspace{0.7cm}
-\noindent{\textbf{Keywords}: % RELLENAR CON LAS PALABRAS CLAVE EN INGLES
+\noindent{\textbf{Keywords}: anomaly, outlier, manteinance, manteinance prediction, machine learning, deep learning, neural network, tensorflow, keras.
 			}\\
 
 \vspace{0.7cm}
 \noindent{\textbf{Abstract}}\\
 
-% RELLENAR CON EL ABSTRACT EN INGLES
+The detection of anomalies is an area of study in Data Science that is gaining more and more weight. This area can be approached in different ways with different definitions, as we can even consider a very unbalanced classification problem as a problem of supervised anomaly detection. Most commonly we find a set of data without labels and our aim is to discover among these data those that are differ from the rest so much that we can consider them as anomalies. Often these anomalies are not evident, as if they were they would not be of particular interest, and this is where the possibility of applying autonomous algorithms that can detect these anomalies and score them comes in. With this, what we obtain is not a classification as such, but a series of scores for each of the data we have that tell us how anomalous each data point is. The higher the score, the more anomalous it is.
+
+The usefulness of these algorithms well known. We can use these algorithms to detect bank fraud according to the anomalous use of the supposed customers, observing for example, the use of the credit card. We can use them to detect patients with serious and/or strange pathologies among a group of normal patients. For example we could use the heart data of healthy patients and sick patients to try to distinguish the most serious among the sick ones. The number of applications of these algorithms is very wide, but in this case we are going to focus on one of the possible applications of the algorithms for detecting anomalies: predictive maintenance.
+
+Predictive maintenance consists of trying to detect the breakages of a machine or device before they occur due to use or wear. Depending on the nature of the breakages that we want to detect this can be studied as a change of concept in the data (due to a slight and continuous deviation in time) or as detection of anomalies (if the change is more sudden) although we could solve the two possibilities from the perspective of detection of anomalous events.
+
+In the study proposed, we use the data of machinery from the company ArcelorMittal. This data contains measurements of a certain machine of the company and our objective will be to detect when the data deviates from the normal and therefore indicates a malfunction of the machinery that can derive in a stop for maintenance. 
+
+In order to address this problem we will first make an extensive review of the theoretical framework of the problem. This framework will outline the concepts used for machine learning in general. Accompanying this section we will have definitions of anomalies as well as a brief review of some multivariate statistics concepts that have been necessary to give alternative definitions of anomalies and to be able to study the models used.
+
+As central sections we will have a brief theoretical review of Deep Learning as well as the models implemented based on the theory described previously. Finally we will have the explanation of the experimentation and results obtained in the study.
+
+To be more specific, 5 Deep Learning models have been implemented which will be opposed to a series of classical models adapted to work with time series, since this is the nature of the data that define the problem. The implemented models make use of three main types of layers or neurons: fully connected, convolutional and LSTM. Specifically, a fully connected layer Autoencoder model that reconstructs instance by instance, a fully connected layer Autoencoder model that reconstructs instances by batches, an LSTM layer Autoencoder model that reconstructs instances by batches and two prediction models using LSTM and convolutional layers with LSTM are implemented.
+
+Autoencoder models will try to reconstruct the data by pre-coding them and we will analyse the error these models make when reconstructing the instances. The greater the error made in the reconstruction, the more anomalous or strange the data is and therefore the higher the score it will have. On the other hand, prediction models learn to predict data in a normal situation. When we have data that are not normal we will have a large error in the prediction and therefore the reconstruction given will be worse resulting in a higher score.
+
+In the study we will see how the algorithm chosen to obtain the scores is not the only piece of the puzzle. When we have the scores we must obtain the time periods that we consider as alerts and therefore the periods in which the algorithm would give the alarm to the machine operators. We will explain this algorithm in more detail in the following sections, but basically we will need two pieces mainly. The first one will be in charge of taking the scores given by our detection and anomaly algorithm and transforming them into labels. What this means is that, by means of an adaptive scoring system, we are going to establish the level of when a score is considered sufficiently anomalous to say that an instance is anomalous and therefore be able to mark it as such. In this way, at the end of the process, we obtain a classification of the data as anomalous and normal. After this, the next piece of the puzzle is responsible for establishing the time bands in which we will give the alarm. If we have many anomalous instances in the same time frame, then we have an anomalous time window and therefore we will give an alarm with it.
+
+The main characteristic and difficulty of the problem is that it is unsupervised, as we do not have labels of when we should give an alarm or alert and when we are doing it right or wrong. This forces us to have to define the problem a little better and try to solve this in order to obtain measurements of how well or badly our algorithms are working and to be able to evaluate them.
+
+Throughout the work we will see and solve all these steps in order to be able to make a conclusion about the usefulness of the study.
 
 \chapter*{Agradecimientos}
 \thispagestyle{empty}
