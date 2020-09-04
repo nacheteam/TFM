@@ -171,8 +171,8 @@ Vamos a poner un ejemplo para poder ver la complejidad del cálculo del gradient
 		\fill [black] (31,-38.8) -- (30.2,-38.3) -- (30.2,-39.3);
 		\draw (24.6,-39.3) node [below] {$w_{22}^{(1)}$};
 	\end{tikzpicture}
-	\label{fig:backpropagation-ejemplo}
 	\caption{Ejemplo de una red neuronal sencilla.}
+	\label{fig:backpropagation-ejemplo}
 \end{figure}
 
 Aquí podemos ver una red neuronal con 2 entradas y dos capas. Cada una de las capas tiene sus pesos y sus sesgos correspondientes. Entonces, en el modelo que hemos puesto como ejemplo, tenemos el siguiente vector de parámetros que determina nuestra red neuronal:
@@ -251,7 +251,7 @@ Llegados a este punto ya tenemos la salida que nos produce nuestra red neuronal 
 
 Para resolver este problema tenemos la aproximación clásica de Gradiente Descendente Estocástico aunque no es la única herramienta que podemos usar para esto. Veremos algunas de las más utilizadas y cómo nos ayudan para obtener nuevos parámetros que mejoren el desempeño de las redes.
 
-En primer lugar cabe explicar el algoritmo más empleado en esta tarea: Gradiente Descendente Estocástico. En Deep Learning se emplea el entrenamiento por lotes o batches en inglés, lo que hace inviable el uso de ténicas como Gradiente Descendente. Es por ello que se suele emplear la aproximación estocástica de Gradiente Descendente al ir calculando una aproximación del gradiente con números pequeños de muestras. Veamos el algoritmo en pseudocódigo:
+En primer lugar cabe explicar el algoritmo más empleado en esta tarea: Gradiente Descendente Estocástico. En Deep Learning se emplea el entrenamiento por lotes o batches en inglés, lo que hace inviable el uso de técnicas como Gradiente Descendente. Es por ello que se suele emplear la aproximación estocástica de Gradiente Descendente al ir calculando una aproximación del gradiente con números pequeños de muestras. Veamos el algoritmo en pseudocódigo:
 
 \begin{algorithm}[H]{\Large{\textbf{Gradiente Descendente Estocástico en la iteración k-ésima}}}
 	
@@ -362,7 +362,7 @@ También es común emplear variaciones de este algoritmo, pues puede mejorar con
 		
 		$r\leftarrow 0$
 		
-		\While{no se cumlpa el criterio de parada}{
+		\While{no se cumpla el criterio de parada}{
 		
 			Escoger un batch de datos de tamaño $m$ $x^{(1)}, ..., x^{(m)}$ con correspondientes objetivos $y^{(1)}, ..., y^{(m)}$
 			
@@ -405,7 +405,7 @@ También es común emplear variaciones de este algoritmo, pues puede mejorar con
 		
 		$r\leftarrow 0$
 		
-		\While{no se cumlpa el criterio de parada}{
+		\While{no se cumpla el criterio de parada}{
 			
 			Escoger un batch de datos de tamaño $m$ $x^{(1)}, ..., x^{(m)}$ con correspondientes objetivos $y^{(1)}, ..., y^{(m)}$
 			
@@ -452,7 +452,7 @@ También es común emplear variaciones de este algoritmo, pues puede mejorar con
 		
 		$t\leftarrow 0$
 		
-		\While{no se cumlpa el criterio de parada}{
+		\While{no se cumpla el criterio de parada}{
 			
 			Escoger un batch de datos de tamaño $m$ $x^{(1)}, ..., x^{(m)}$ con correspondientes objetivos $y^{(1)}, ..., y^{(m)}$
 			
@@ -525,7 +525,7 @@ $$s(t) = (x*w)(t) = \sum_{a=-\infty}^{\infty}x(a)w(t-a)$$
 
 Está claro que esta definición que hemos dado no tiene sentido cuando tenemos más de un valor, es decir, cuando la función $x$ no es real, si no que da como salida un vector de números.
 
-Normalmente empleamos como entrada en este tipo de redes con capas convolucionales un array de datos, por ejemplo, una imagen o varias instancias de una serie temporal. Esto hace que tengamos como input una matriz bidimensional o tridimensional normalmente como entrada, por lo que tenemos que pensar en hacer la operación de convolución en varios ejes. La aplicación de esta operación nos va a dar como resultado de nuevo una matriz, como es natural. Por tanto, suponiendo que $I$ es nuestra imagen de entrada o grupo de datos de una serie temporal, podemos definir el operador de convolución sobre dos ejes como:
+Normalmente empleamos como entrada en este tipo de redes con capas convolucionales un vector de datos, por ejemplo, una imagen o varias instancias de una serie temporal. Esto hace que tengamos como input una matriz bidimensional o tridimensional normalmente como entrada, por lo que tenemos que pensar en hacer la operación de convolución en varios ejes. La aplicación de esta operación nos va a dar como resultado de nuevo una matriz, como es natural. Por tanto, suponiendo que $I$ es nuestra imagen de entrada o grupo de datos de una serie temporal, podemos definir el operador de convolución sobre dos ejes como:
 
 $$S(i,j) = (I*K)(i,j) = \sum_{m} \sum_{n} I(m,n)K(i-m,j-n)$$
 
@@ -649,7 +649,7 @@ El tipo de Autoencoders que vamos a emplear son denominados como Autoencoders in
 
 Para el proceso de detección de anomalías vamos a usar esta arquitectura del siguiente modo: entrenaremos con datos limpios sin anomalías e intentaremos que la reconstrucción sea lo más ajustada posible pero siempre con una codificación del menor tamaño posible para forzar la extracción de las características meramente esenciales. Tras esto lo que haremos será predecir, cuando obtengamos una reconstrucción con poco error estaremos ante un dato no anómalo o parecido a los no anómalos vistos previamente por la red y por tanto es capaz de reconstruirlos con poco error. Por contra si no es capaz de reconstruirlos bien y se comete mucho error estaremos ante un dato que no es normal y por tanto no ha sido visto por la red neuronal, cometiendo un mayor error de reconstrucción.
 
-Veamos un ejemplo de un autoencoder de capas totalmente conectadas:
+Veamos un ejemplo de un Autoencoder de capas totalmente conectadas:
 
 \begin{figure}[H]
 	\centering
