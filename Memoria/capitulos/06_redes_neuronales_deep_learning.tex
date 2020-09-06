@@ -293,18 +293,18 @@ Con esto ya si tenemos el algoritmo completo: propagación hacia delante para ob
 También es común emplear variaciones de este algoritmo, pues puede mejorar con respecto a SGD aunque depende siempre del problema y los datos asociados. Las variaciones más comunes de este algoritmo son:
 
 \begin{itemize}
-	\item SGD con momento: a veces el algoritmo de Gradiente Descendente y el algoritmo de Gradiente Descendente Estocástico presentan una oscilación alrededor del mínimo de la función que pretenden minimizar. Veamos un ejemplo de esto:
+	\item SGD con momento: a veces el algoritmo de Gradiente Descendente y el algoritmo de Gradiente Descendente Estocástico presentan una oscilación alrededor del mínimo de la función que pretenden minimizar. Podemos ver un ejemplo de esto en la figura \ref{img:oscilacion-sgd}.
 	
-	\begin{figure}[H]
+	\begin{figure}[]
 		\centering
 		\includegraphics[scale=0.7]{imagenes/sgd.png}
 		\caption{Oscilación alrededor del mínimo.}
 		\label{img:oscilacion-sgd}
 	\end{figure}
 
-	En esta figura podemos ver cómo se produce una oscilación alrededor del mínimo. En funciones más complejas esta oscilación puede ser aún mayor y condicionar el funcionamiento del algoritmo de optimización. Esta variante del algoritmo hace que este zigzagueo u oscilación sea más leve, veamos el algoritmo en pseudocódigo:
+	En la figura \ref{img:oscilacion-sgd} podemos ver cómo se produce una oscilación alrededor del mínimo. En funciones más complejas esta oscilación puede ser aún mayor y condicionar el funcionamiento del algoritmo de optimización. Esta variante del algoritmo hace que este zigzagueo u oscilación sea más leve, podemos ver el algoritmo en pseudocódigo en el algoritmo \ref{alg:sgd-momento}.
 	
-	\begin{algorithm}[H]{\Large{\textbf{Gradiente Descendente Estocástico con momento}}}
+	\begin{algorithm}[]{\Large{\textbf{Gradiente Descendente Estocástico con momento}}}
 		
 		\vspace{15px}
 		
@@ -343,9 +343,9 @@ También es común emplear variaciones de este algoritmo, pues puede mejorar con
 		\vspace{5px}
 	\end{algorithm}
 
-	\item AdaGrad: esta es una versión adaptativa de SGD. El algoritmo varía los parámetros de forma inversamente proporcional a la raíz cuadrada de la suma de los cuadrados de los valores anteriores. Es decir, actualiza la tasa de aprendizaje decrementándola más rápido cuanto mayores sean las derivadas parciales. Como consecuencia de esto el avance en el espacio es más rápido que SGD. Veamos el pseudocódigo:
+	\item AdaGrad: esta es una versión adaptativa de SGD. El algoritmo varía los parámetros de forma inversamente proporcional a la raíz cuadrada de la suma de los cuadrados de los valores anteriores. Es decir, actualiza la tasa de aprendizaje decrementándola más rápido cuanto mayores sean las derivadas parciales. Como consecuencia de esto el avance en el espacio es más rápido que SGD. Podemos ver el pseudocódigo en el algoritmo \ref{alg:adagrad}.
 	
-	\begin{algorithm}[H]{\Large{\textbf{Adagrad}}}
+	\begin{algorithm}[]{\Large{\textbf{Adagrad}}}
 		
 		\vspace{15px}
 		
@@ -385,9 +385,9 @@ También es común emplear variaciones de este algoritmo, pues puede mejorar con
 		\vspace{5px}
 	\end{algorithm}
 
-	\item RMSProp: en vez de ir acumulando los gradientes se hace una media exponencial, lo que teóricamente mejor el comportamiento al minimizar funciones no convexas (aquellas idóneas para SGD).
+	\item RMSProp: en vez de ir acumulando los gradientes se hace una media exponencial, lo que teóricamente mejor el comportamiento al minimizar funciones no convexas (aquellas idóneas para SGD). Podemos ver el algoritmo en pseudocódigo en el algoritmo \ref{alg:rmsprop}.
 	
-	\begin{algorithm}[H]{\Large{\textbf{RMSProp}}}
+	\begin{algorithm}[]{\Large{\textbf{RMSProp}}}
 		
 		\vspace{15px}
 		
@@ -428,9 +428,9 @@ También es común emplear variaciones de este algoritmo, pues puede mejorar con
 		\vspace{5px}
 	\end{algorithm}
 
-	\item Adam: es una modificación de RMSProp con momento. Veamos el pseudocódigo:
+	\item Adam: es una modificación de RMSProp con momento. Podemos ver el algoritmo en pseudocódigo en el algoritmo \ref{alg:Adam}.
 	
-	\begin{algorithm}[H]{\Large{\textbf{Adam}}}
+	\begin{algorithm}[]{\Large{\textbf{Adam}}}
 		
 		\vspace{15px}
 		
@@ -485,6 +485,7 @@ También es común emplear variaciones de este algoritmo, pues puede mejorar con
 \end{itemize}
 
 Con esto ya hemos cubierto cómo aprende una red neuronal de forma completa.
+\newpage
 
 \section{Capas empleadas}
 

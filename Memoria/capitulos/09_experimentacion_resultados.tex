@@ -165,8 +165,8 @@ El objetivo de esta sección es estudiar las gráficas del desarrollo de la func
 
 Como nota inicial podemos comentar el tiempo de entrenamiento de cada uno de los modelos. El modelo Autoencoder totalmente conectado tarda aproximadamente 50 segundos por época, el modelo de Autoencoder totalmente conectado por lotes tarda unos 14 segundos por época, el modelo Autoencoder LSTM tarda unos 250 segundos por época, el modelo de predicción LSTM tarda 2400 segundos por época y el modelo de predicción CNN-LSTM tarda 800 segundos por época. Podemos ver claramente cómo el modelo de predicción LSTM es el que más tiempo consume en el entrenamiento, mientras que el modelo Autoencoder totalmente conectado por lotes es el que menos tarda. Este comportamiento puede deberse a que procesamos por batch de entrenamiento un mayor número de instancias con el Autoencoder totalmente conectado por lotes, además de que los Autoencoder totalmente conectados son los modelos más simples que hemos desarrollado.
 
-El primer modelo que vamos a ver es el Autoencoder totalmente conectado:
-\begin{figure}[H]
+El primer modelo que vamos a ver es el Autoencoder totalmente conectado en la figura \ref{img:loss-autoencoder-fully-connected}.
+\begin{figure}[]
 	\centering
 	\includegraphics[scale=0.75]{imagenes/loss_autoencoder_fully_connected.png}
 	\caption{Evolución de la función de pérdida para el Autoencoder totalmente conectado.}
@@ -175,8 +175,8 @@ El primer modelo que vamos a ver es el Autoencoder totalmente conectado:
 
 Como podemos ver el valor de la función de pérdida empieza cercano a $1.5$ y consigue descender alrededor de $0.9$. El comportamiento del modelo es como el que queremos ver, empezamos con un valor alto de la función de pérdida y se observa una reducción de su valor. Tras esta reducción considerable podemos ver una estabilización de la misma cuando seguimos aumentando el número de épocas, por lo que podemos deducir que el número de épocas de entrenamiento es suficiente.
 
-Veamos ahora la gráfica del modelo Autoencoder totalmente conectado por lotes:
-\begin{figure}[H]
+El siguiente modelo es el Autoencoder totalmente conectado por lotes. Podemos ver su gráfica en la figura \ref{img:loss-autoencoder-fully-connected-batch}.
+\begin{figure}[]
 	\centering
 	\includegraphics[scale=0.75]{imagenes/loss_autoencoder_fully_connected_batch.png}
 	\caption{Evolución de la función de pérdida para el Autoencoder totalmente conectado por lotes.}
@@ -185,8 +185,8 @@ Veamos ahora la gráfica del modelo Autoencoder totalmente conectado por lotes:
 
 En este caso podemos ver un comportamiento irregular. En primer lugar podemos ver cómo la primera época (por la inicialización aleatoria de pesos) obtiene una buena loss, luego sube su valor y empieza un descenso suavizado estabilizándose al final. Lo extraño de este comportamiento es que no se estabiliza completamente, ya que tenemos una pequeña crecida y luego una bajada. Además lo peor de todo lo que podemos observar es el valor tan alto de loss que tenemos. Tenemos un valor enorme de la función de pérdida, posiblemente debido a que no estamos consiguiendo que la red aprenda lo suficiente, ya que esto implica que el error acumulado en la reconstrucción de toda la secuencia es muy alto. Se ha probado con secuencias más bajas de tamaño y es claro que el error se reduce hasta bajar a una única instancia, imitando por tanto el comportamiento del modelo anterior. Esto nos puede indicar que este modelo no será muy efectivo en la detección de eventos anómalos, lo veremos en siguientes secciones.
 
-Ahora vamos a ver el aprendizaje del Autoencoder con capas LSTM:
-\begin{figure}[H]
+Podemos ver ahora el aprendizaje del Autoencoder con capas LSTM en la figura \ref{img:loss-autoencoder-lstm}.
+\begin{figure}[]
 	\centering
 	\includegraphics[scale=0.75]{imagenes/loss_autoencoder_lstm.png}
 	\caption{Evolución de la función de pérdida para el Autoencoder LSTM.}
@@ -195,8 +195,8 @@ Ahora vamos a ver el aprendizaje del Autoencoder con capas LSTM:
 
 De nuevo en este modelo podemos ver un comportamiento adecuado al que buscamos. Empezamos con un valor de la función de pérdida mayor que 40, acabando en un valor cercano a $0.9$ de nuevo. Podemos ver que la progresión en las 5 primeras épocas es muy notoria, reduciéndose el valor de la función de pérdida por debajo de 5. Tras esto se va teniendo una pendiente menos pronunciada hasta que vemos como al final se estabiliza la reducción de la loss. Este comportamiento nos está diciendo que el modelo es capaz de aprender y que además el número de épocas empleadas en el aprendizaje es adecuado.
 
-Ahora veremos la gráfica correspondiente al modelo de predicción CNN-LSTM:
-\begin{figure}[H]
+Podemos ver la gráfica del aprendizaje del modelo de predicción CNN-LSTM en la figura \ref{img:loss-cnn-lstm-forecaster}.
+\begin{figure}[]
 	\centering
 	\includegraphics[scale=0.75]{imagenes/loss_cnn_lstm_forecaster.png}
 	\caption{Evolución de la función de pérdida para el predictor CNN-LSTM.}
@@ -205,8 +205,8 @@ Ahora veremos la gráfica correspondiente al modelo de predicción CNN-LSTM:
 
 Podemos ver en este caso que los valores de la función de pérdida empiezan bajos, aún así continúan reduciéndose y se estabilizan al final. Con esta gráfica podemos ver que el aprendizaje del modelo es adecuado, ya que consigue una buena loss y se estabilizan los valores, indicando que el número de épocas es suficiente. El valor final de la función de pérdida queda finalmente alrededor de 1.
 
-Por último veamos la gráfica del modelo de predicción LSTM:
-\begin{figure}[H]
+Por último vemos el aprendizaje del modelo de predicción LSTM en la figura \ref{img:loss-lstm-forecaster}.
+\begin{figure}[]
 	\centering
 	\includegraphics[scale=0.75]{imagenes/loss_lstm_forecasting.png}
 	\caption{Evolución de la función de pérdida para el predictor LSTM.}
@@ -453,7 +453,7 @@ En la siguiente columna tenemos el AUC o Área Bajo la Curva ROC en este caso. L
 
 En las gráficas podemos ver que tenemos una línea roja discontinua en medio. Esta línea nos marca el comportamiento de un modelo aleatorio, que tendría la misma efectividad que lanzar una moneda al aire y discernir la clase de forma aleatoria según una uniforme. La intención es que los mejores modelos estén por encima de esta línea y si el modelo está por debajo es que es peor que un modelo aleatorio.
 
-Podemos ver que el mejor de los modelos según la curva ROC es el predictor CNN-LSTM con un AUC de $0.72$. Por contra aquí podemos ver que la tasa de falsos positivos hace que los modelos KNN y HBOS tengan las peores curvas ROC de todas. En cuanto al modelos FeatureBagging LOF hemos visto ya que no acierta lo suficiente como para tenerlo en consideración y podemos ver que PCA tiene un comportamiento razonablemente equilibrado pero sólo predicen correctamente 16 de los 28 mantenimientos por lo que no está a la altura del resto de modelos. Por otro lado tenemos a LODA que tiene un comportamiento razonablemente bueno pero es peor aún así que el predictor CNN-LSTM.
+Podemos ver que el mejor de los modelos según la curva ROC es el predictor CNN-LSTM con un AUC de $0.72$. Por contra aquí podemos ver que la tasa de falsos positivos hace que los modelos KNN y HBOS tengan las peores curvas ROC de todas. En cuanto al modelo FeatureBagging LOF hemos visto ya que no acierta lo suficiente como para tenerlo en consideración y podemos ver que PCA tiene un comportamiento razonablemente equilibrado pero sólo predicen correctamente 16 de los 28 mantenimientos por lo que no está a la altura del resto de modelos. Por otro lado tenemos a LODA que tiene un comportamiento razonablemente bueno pero es peor aún así que el predictor CNN-LSTM.
 
 Por tanto de nuevo hemos podido ver que el modelo de predicción CNN-LSTM es el modelo que mejor resultado nos ha arrojado en estas métricas.
 
@@ -486,7 +486,7 @@ Podemos ver que el modelo que más tiempo consume (dando malos resultados) es el
 	\label{img:tiempos-prediccion2}
 \end{figure}
 
-Aquí podemos ver algo mejor los tiempos que consumen los algoritmos en predecir. Podemos ver que LOF y KNN son los que maś tiempo consumen en predecir, por encima de 90 segundos. Por otro lado tenemos Isolation Forest después de estos con alrededor ed 40-45 segundos. Tras esto vienen el resto de modelos con unos tiempos mucho más bajos, todos con 10 segundos o menos en predecir un día de datos completo. 
+Aquí podemos ver algo mejor los tiempos que consumen los algoritmos en predecir. Podemos ver que LOF y KNN son los que maś tiempo consumen en predecir, por encima de 90 segundos. Por otro lado tenemos Isolation Forest después de estos con alrededor de 40-45 segundos. Tras esto vienen el resto de modelos con unos tiempos mucho más bajos, todos con 10 segundos o menos en predecir un día de datos completo. 
 
 Cabe decir que, por tiempo consumido, todos los modelos son viables en el uso para esta tarea, pero podemos ver claramente que los modelos Deep Learning consumen muy poco tiempo y en concreto, el modelo de predicción CNN-LSTM consume poco tiempo y es el modelo que mejor resultado nos ha arrojado.
 
