@@ -206,7 +206,7 @@
 \section{Explicación del problema}
 
 \begin{frame}[fragile]{Explicación del problema}
-	\vspace{10px}
+	\vspace{5px}
 	\pause
 	\metroset{block=fill}
 	
@@ -218,22 +218,19 @@
 		Empleamos 438 como entrenamiento, 30 para hallar cotas y 30 para test, dejando más de 2.5 millones de instancias en test.
 	\end{block}
 
-	\begin{exampleblock}{Enfoque}
-		Obtenemos las puntuaciones de anomalías con algoritmos para ello, luego obtenemos una clasificación de los puntos y finalmente los pasamos por un sistema de alertas basado en ventanas.
-	\end{exampleblock}
-	
-\end{frame}
-
-\begin{frame}[fragile]{Algoritmo de alarmas}
-	\vspace{10px}
 	\pause
-	\metroset{block=fill}
-	
-	Calculamos las puntuaciones con un método de detección de anomalías.
-	
-	Pasamos una ventana deslizante y calculamos una cota local, hacemos la media con la cota general y comprobamos si la puntuación es mayor que la combinación de las cotas.
-	
-	Sobre los datos clasificados pasamos ventanas deslizantes y comprobamos si hay más de un 5\% de anomalías, entonces damos alerta.
+
+	\begin{exampleblock}{Metodología}
+		Calculamos las puntuaciones con un método de detección de anomalías.
+		
+		\pause
+		
+		Pasamos una ventana deslizante y calculamos una cota local, hacemos la media con la cota general y comprobamos si la puntuación es mayor que la combinación de las cotas.
+		
+		\pause
+		
+		Sobre los datos clasificados pasamos ventanas deslizantes y comprobamos si hay más de un 5\% de anomalías, entonces damos alerta.
+	\end{exampleblock}
 	
 \end{frame}
 
@@ -249,13 +246,8 @@
 		
 		Modelos de Predicción: aprenden a predecir en condiciones de normalidad. Cuanto peor lo hagan más anómalo será el dato.
 	\end{block}
-	
-\end{frame}
 
-\begin{frame}[fragile]{Modelos Deep Learning implementados}
-	\vspace{10px}
 	\pause
-	\metroset{block=fill}
 	
 	\begin{block}{Modelos}
 		\begin{itemize}
@@ -408,11 +400,11 @@
 			\textbf{AE FCC lotes}                 & 0.8049          & 0.2384          & 0.1919           & 0.1413          & 0.52          \\ \hline
 			\textbf{AE LSTM}                      & 0.8049          & 0.1337          & 0.1076           & 0.1267          & 0.47          \\ \hline
 			\textbf{Pred. LSTM}               & 0.8049          & 0.2384          & 0.1919           & 0.1413          & 0.52          \\ \hline
-			\textbf{Pred. CNN-LSTM}           & 0.8537          & 0.5856          & 0.5              & 0.2422          & 0.72          \\ \hline
-			\textbf{FB LOF}                       & 0.4286          & \textbf{0.8586} & \textbf{0.3680}  & 0.2830          & 0.64          \\ \hline
-			\textbf{HBOS}                         & \textbf{0.8980} & 0               & 0                & \textbf{0.1471} & \textbf{0.45} \\ \hline
+			\textbf{Pred. CNN-LSTM}           & 0.8537          & 0.5856          & \textbf{0.5}     & 0.2422          & \textbf{0.72} \\ \hline
+			\textbf{FB LOF}                       & 0.4286          & \textbf{0.8586} & 0.3680           & \textbf{0.2830} & 0.64          \\ \hline
+			\textbf{HBOS}                         & \textbf{0.8980} & 0               & 0                & 0.1471          & 0.45          \\ \hline
 			\textbf{IForest}                      & 0.7568          & 0.3397          & 0.2571           & 0.1369          & 0.55          \\ \hline
-			\textbf{KNN}                          & 0.8959          & 0.0020          & 0.0018           & \textbf{0.1443} & \textbf{0.45} \\ \hline
+			\textbf{KNN}                          & 0.8959          & 0.0020          & 0.0018           & 0.1443          & 0.45          \\ \hline
 			\textbf{LODA}                         & 0.8571          & 0.3353          & 0.2874           & 0.1718          & 0.6           \\ \hline
 			\textbf{LOF}                          & 0.8696          & 0.0747          & 0.0649           & 0.1436          & 0.47          \\ \hline
 			\textbf{PCA}                          & 0.6842          & 0.5105          & 0.3493           & 0.1625          & 0.6           \\ \hline
